@@ -1,0 +1,14 @@
+# One set of versions shared by training, the Flink job, the API and the simulator.
+# A pickled model must be loaded with the same library versions it was saved with,
+# and PyFlink 2.2 (via Apache Beam) caps numpy < 2.2 and pandas < 2.3.
+numpy==2.1.3
+pandas==2.2.3
+scipy==1.15.3
+scikit-learn==1.6.1
+joblib==1.5.1
+shap==0.47.2
+pydantic==2.11.7
+# Model libraries (the deployed models are LightGBM; the others may be chosen on retraining).
+lightgbm==4.6.0
+catboost==1.2.8
+xgboost==3.4.1

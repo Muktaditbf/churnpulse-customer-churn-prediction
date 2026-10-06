@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          uv venv
+          uv pip install -e ".[serving,dev]" -r requirements/serving.txt shap==0.47.2
+      - name: Lint
+        run: .venv/bin/ruff check src api streaming tests scripts notebooks/build_notebooks.py
+      - name: Unit tests
+        env: {PYTHONWARNINGS: ignore}
+        run: .venv/bin/python -m pytest -m "not e2e"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run: {working-directory: frontend}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images
+        run: |
+          docker build -f api/Dockerfile -t churnpulse/app:ci .
+          docker build -f streaming/flink_job/Dockerfile -t churnpulse/flink:ci .
+          docker build -t churnpulse/frontend:ci frontend

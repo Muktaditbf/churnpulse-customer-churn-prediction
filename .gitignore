@@ -1,0 +1,24 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local ML tracking (re-created by `make train`)
+mlflow.db
+mlruns/
+mlartifacts/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Secrets / local config
+.env
+
+# Editors & OS
+.idea/
+.vscode/
+.DS_Store

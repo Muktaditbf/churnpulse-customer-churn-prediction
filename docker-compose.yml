@@ -1,0 +1,203 @@
+# ChurnPulse - the whole platform with one command:  make up   (or: docker compose up -d)
+name: churnpulse
+
+x-flink: &flink
+  image: churnpulse/flink:1.0
+  build:
+    context: .
+    dockerfile: streaming/flink_job/Dockerfile
+    network: host
+  volumes:
+    - ./models:/opt/churnpulse/models:ro
+    - flink-checkpoints:/opt/flink/checkpoints
+  environment:
+    KAFKA_BOOTSTRAP: kafka:9092
+    FLINK_PROPERTIES: |
+      jobmanager.rpc.address: flink-jobmanager
+      taskmanager.numberOfTaskSlots: 2
+      parallelism.default: 2
+      jobmanager.memory.process.size: 1024m
+      taskmanager.memory.process.size: 2560m
+      taskmanager.memory.managed.fraction: 0.3
+      execution.checkpointing.dir: file:///opt/flink/checkpoints
+      execution.checkpointing.interval: 30s
+      execution.checkpointing.num-retained: 2
+      state.backend.type: hashmap
+      python.executable: /opt/venv/bin/python
+      python.client.executable: /opt/venv/bin/python
+      metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
+      metrics.reporter.prom.port: 9249
+
+x-app: &app
+  image: churnpulse/app:1.0
+  build:
+    context: .
+    dockerfile: api/Dockerfile
+    network: host
+  volumes:
+    - ./models:/app/models:ro
+  environment: &app-env
+    DATABASE_URL: postgresql://churnpulse:${POSTGRES_PASSWORD:-churnpulse}@postgres:5432/churnpulse
+    KAFKA_BOOTSTRAP: kafka:9092
+
+services:
+  # ------------------------------------------------------------ messaging
+  kafka:
+    image: apache/kafka:3.9.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_HEAP_OPTS: -Xmx512m -Xms512m
+    ports: ["9094:9094"]
+    volumes: [kafka-data:/var/lib/kafka/data]
+    healthcheck:
+      test: /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1
+      interval: 10s
+      timeout: 10s
+      retries: 12
+    restart: unless-stopped
+
+  kafka-init:
+    image: apache/kafka:3.9.1
+    depends_on: {kafka: {condition: service_healthy}}
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        # customer-events is the event log Flink rebuilds state from: keep it forever.
+        create() { /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists \
+                     --replication-factor 1 --topic "$$1" --partitions "$$2" $${3:+--config $$3}; }
+        create customer-events 6 retention.ms=-1
+        create churn-predictions 6
+        create churn-stats 1
+    restart: "no"
+
+  kafka-ui:
+    image: kafbat/kafka-ui:v1.3.0
+    environment:
+      KAFKA_CLUSTERS_0_NAME: churnpulse
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      JAVA_OPTS: -Xmx256m
+    ports: ["8080:8080"]
+    depends_on: {kafka: {condition: service_healthy}}
+    restart: unless-stopped
+
+  # ------------------------------------------------------------ storage
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: churnpulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-churnpulse}
+      POSTGRES_DB: churnpulse
+    ports: ["5432:5432"]
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: pg_isready -U churnpulse -d churnpulse
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  # ------------------------------------------------------------ stream processing
+  flink-jobmanager:
+    <<: *flink
+    command: jobmanager
+    ports: ["8081:8081"]
+    restart: unless-stopped
+
+  flink-taskmanager:
+    <<: *flink
+    command: taskmanager
+    depends_on: [flink-jobmanager]
+    restart: unless-stopped
+
+  flink-job:
+    <<: *flink
+    depends_on:
+      kafka-init: {condition: service_completed_successfully}
+      flink-taskmanager: {condition: service_started}
+    entrypoint: ["/bin/bash", "/opt/flink/usrlib/submit.sh"]
+    restart: on-failure
+
+  # ------------------------------------------------------------ serving
+  api:
+    <<: *app
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+    restart: unless-stopped
+
+  simulator:
+    <<: *app
+    command: ["python", "streaming/simulator/simulator.py"]
+    environment:
+      <<: *app-env
+      EVENTS_PER_SEC: ${EVENTS_PER_SEC:-4}
+    depends_on:
+      postgres: {condition: service_healthy}
+      kafka-init: {condition: service_completed_successfully}
+    healthcheck: {disable: true}
+    restart: unless-stopped
+
+  frontend:
+    image: churnpulse/frontend:1.0
+    build:
+      context: frontend
+      network: host
+    ports: ["3000:80"]
+    depends_on: [api]
+    restart: unless-stopped
+
+  # ------------------------------------------------------------ ML & monitoring
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.16.1
+    environment:
+      # Background GenAI-evaluation workers (~1.4 GB) are not used here.
+      MLFLOW_SERVER_ENABLE_JOB_EXECUTION: "false"
+      MLFLOW_SERVER_JOB_ENABLE_PERIODIC_TASKS: "false"
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000 --workers 1
+      --backend-store-uri sqlite:///${PROJECT_ROOT}/mlflow.db
+      --allowed-hosts "*"
+    volumes:
+      - ${PROJECT_ROOT}:${PROJECT_ROOT}
+    ports: ["5000:5000"]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    volumes: [./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro]
+    ports: ["9090:9090"]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-churnpulse}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/churnpulse.json
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3001:3000"]
+    depends_on: [prometheus]
+    restart: unless-stopped
+
+volumes:
+  kafka-data:
+  pg-data:
+  flink-checkpoints:

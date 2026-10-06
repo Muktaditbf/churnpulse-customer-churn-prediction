@@ -1,0 +1,6 @@
+* text=auto
+*.png binary
+*.joblib binary
+*.ipynb text eol=lf
+data/raw/** -text
+data/processed/** -text

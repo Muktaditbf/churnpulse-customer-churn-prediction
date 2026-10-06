@@ -1,0 +1,379 @@
+{
+  "trained_at": "2026-10-06T09:09:57+00:00",
+  "dataset": "IBM Telco Customer Churn v11.1.3 (7,043 customers, California)",
+  "train_rows": 5634,
+  "test_rows": 1409,
+  "churn_rate": 0.2653532126375577,
+  "excluded_columns": [
+    "Churn Score",
+    "Churn Category",
+    "Churn Reason",
+    "Customer Status",
+    "Churn Label",
+    "Churn Value",
+    "Count",
+    "Quarter",
+    "CLTV"
+  ],
+  "business_assumptions": {
+    "offer_months_of_bill": 1.5,
+    "offer_success_rate": 0.3,
+    "months_of_value": 12
+  },
+  "versions": {
+    "python": "3.12.15",
+    "scikit-learn": "1.6.1"
+  },
+  "models": {
+    "profile": {
+      "model_name": "lightgbm",
+      "features": 42,
+      "cv_roc_auc": 0.9129332888754398,
+      "best_params": {
+        "n_estimators": 350,
+        "learning_rate": 0.019885204867633784,
+        "num_leaves": 13,
+        "min_child_samples": 28,
+        "subsample": 0.9470085954419252,
+        "colsample_bytree": 0.4993547614450324,
+        "reg_lambda": 1.03477284069276
+      },
+      "threshold": 0.44,
+      "test_metrics": {
+        "roc_auc": 0.9165697899713245,
+        "pr_auc": 0.8038378369234073,
+        "brier": 0.10343355711999985,
+        "threshold": 0.44,
+        "accuracy": 0.8573456352022711,
+        "precision": 0.7521865889212828,
+        "recall": 0.6898395721925134,
+        "f1": 0.7196652719665272,
+        "accuracy_at_0.5": 0.8545067423704755,
+        "confusion": {
+          "tn": 950,
+          "fp": 85,
+          "fn": 116,
+          "tp": 258
+        },
+        "retention_value": 32902.515,
+        "retention_value_contact_everyone": -35528.56500000001
+      },
+      "model_comparison": [
+        {
+          "model": "catboost",
+          "roc_auc": 0.9119,
+          "roc_auc_std": 0.0081,
+          "pr_auc": 0.8012,
+          "accuracy": 0.8555,
+          "f1": 0.7091,
+          "recall": 0.6635,
+          "precision": 0.7618,
+          "seconds": 2.359
+        },
+        {
+          "model": "lightgbm",
+          "roc_auc": 0.9102,
+          "roc_auc_std": 0.0093,
+          "pr_auc": 0.7952,
+          "accuracy": 0.8539,
+          "f1": 0.7112,
+          "recall": 0.6776,
+          "precision": 0.7486,
+          "seconds": 0.8735
+        },
+        {
+          "model": "xgboost",
+          "roc_auc": 0.909,
+          "roc_auc_std": 0.0096,
+          "pr_auc": 0.7943,
+          "accuracy": 0.8534,
+          "f1": 0.71,
+          "recall": 0.6763,
+          "precision": 0.7479,
+          "seconds": 1.574
+        },
+        {
+          "model": "logistic_regression",
+          "roc_auc": 0.8977,
+          "roc_auc_std": 0.0049,
+          "pr_auc": 0.7694,
+          "accuracy": 0.8403,
+          "f1": 0.6871,
+          "recall": 0.6609,
+          "precision": 0.7159,
+          "seconds": 0.5409
+        },
+        {
+          "model": "random_forest",
+          "roc_auc": 0.8962,
+          "roc_auc_std": 0.0057,
+          "pr_auc": 0.7706,
+          "accuracy": 0.8466,
+          "f1": 0.683,
+          "recall": 0.6227,
+          "precision": 0.7569,
+          "seconds": 2.0041
+        }
+      ],
+      "top_features": [
+        {
+          "feature": "contract",
+          "mean_abs_shap": 0.7789,
+          "category": "behavioural"
+        },
+        {
+          "feature": "referrals",
+          "mean_abs_shap": 0.615,
+          "category": "psychographic"
+        },
+        {
+          "feature": "num_dependents",
+          "mean_abs_shap": 0.4295,
+          "category": "demographic"
+        },
+        {
+          "feature": "contract_months",
+          "mean_abs_shap": 0.3245,
+          "category": "behavioural"
+        },
+        {
+          "feature": "tenure_months",
+          "mean_abs_shap": 0.1974,
+          "category": "behavioural"
+        },
+        {
+          "feature": "monthly_charge",
+          "mean_abs_shap": 0.1612,
+          "category": "behavioural"
+        },
+        {
+          "feature": "payment_method",
+          "mean_abs_shap": 0.1346,
+          "category": "behavioural"
+        },
+        {
+          "feature": "avg_monthly_charge",
+          "mean_abs_shap": 0.0991,
+          "category": "behavioural"
+        },
+        {
+          "feature": "age",
+          "mean_abs_shap": 0.0907,
+          "category": "demographic"
+        },
+        {
+          "feature": "paperless_billing",
+          "mean_abs_shap": 0.0862,
+          "category": "behavioural"
+        },
+        {
+          "feature": "married",
+          "mean_abs_shap": 0.0817,
+          "category": "demographic"
+        },
+        {
+          "feature": "internet_type",
+          "mean_abs_shap": 0.0812,
+          "category": "technographic"
+        },
+        {
+          "feature": "latitude",
+          "mean_abs_shap": 0.079,
+          "category": "geographic"
+        },
+        {
+          "feature": "total_charges",
+          "mean_abs_shap": 0.0783,
+          "category": "behavioural"
+        },
+        {
+          "feature": "log_population",
+          "mean_abs_shap": 0.0707,
+          "category": "geographic"
+        }
+      ],
+      "importance_by_category": {
+        "geographic": 0.0515,
+        "demographic": 0.1682,
+        "technographic": 0.1225,
+        "behavioural": 0.5026,
+        "psychographic": 0.1552
+      }
+    },
+    "survey": {
+      "model_name": "lightgbm",
+      "features": 43,
+      "cv_roc_auc": 0.9933298692671058,
+      "best_params": {
+        "n_estimators": 350,
+        "learning_rate": 0.017653475008486314,
+        "num_leaves": 22,
+        "min_child_samples": 81,
+        "subsample": 0.9805800960199187,
+        "colsample_bytree": 0.6971530708405203,
+        "reg_lambda": 0.27580874631661445
+      },
+      "threshold": 0.24,
+      "test_metrics": {
+        "roc_auc": 0.9927019556175567,
+        "pr_auc": 0.9837315699293265,
+        "brier": 0.027013016289638387,
+        "threshold": 0.24,
+        "accuracy": 0.9638041163946061,
+        "precision": 0.9329758713136729,
+        "recall": 0.93048128342246,
+        "f1": 0.9317269076305221,
+        "accuracy_at_0.5": 0.9652235628105039,
+        "confusion": {
+          "tn": 1010,
+          "fp": 25,
+          "fn": 26,
+          "tp": 348
+        },
+        "retention_value": 53013.34499999999,
+        "retention_value_contact_everyone": -35528.56500000001
+      },
+      "model_comparison": [
+        {
+          "model": "catboost",
+          "roc_auc": 0.993,
+          "roc_auc_std": 0.0017,
+          "pr_auc": 0.9842,
+          "accuracy": 0.9647,
+          "f1": 0.9314,
+          "recall": 0.9043,
+          "precision": 0.9605,
+          "seconds": 2.4684
+        },
+        {
+          "model": "lightgbm",
+          "roc_auc": 0.9929,
+          "roc_auc_std": 0.0019,
+          "pr_auc": 0.984,
+          "accuracy": 0.9633,
+          "f1": 0.9291,
+          "recall": 0.9077,
+          "precision": 0.9519,
+          "seconds": 0.9165
+        },
+        {
+          "model": "xgboost",
+          "roc_auc": 0.9926,
+          "roc_auc_std": 0.002,
+          "pr_auc": 0.9833,
+          "accuracy": 0.9615,
+          "f1": 0.9258,
+          "recall": 0.905,
+          "precision": 0.9478,
+          "seconds": 1.537
+        },
+        {
+          "model": "logistic_regression",
+          "roc_auc": 0.9923,
+          "roc_auc_std": 0.002,
+          "pr_auc": 0.9825,
+          "accuracy": 0.9601,
+          "f1": 0.9237,
+          "recall": 0.9104,
+          "precision": 0.9378,
+          "seconds": 0.4779
+        },
+        {
+          "model": "random_forest",
+          "roc_auc": 0.9818,
+          "roc_auc_std": 0.0059,
+          "pr_auc": 0.9708,
+          "accuracy": 0.9636,
+          "f1": 0.9279,
+          "recall": 0.8843,
+          "precision": 0.9764,
+          "seconds": 2.1234
+        }
+      ],
+      "top_features": [
+        {
+          "feature": "satisfaction_score",
+          "mean_abs_shap": 2.8641,
+          "category": "psychographic"
+        },
+        {
+          "feature": "referrals",
+          "mean_abs_shap": 0.4303,
+          "category": "psychographic"
+        },
+        {
+          "feature": "online_security",
+          "mean_abs_shap": 0.3943,
+          "category": "technographic"
+        },
+        {
+          "feature": "contract",
+          "mean_abs_shap": 0.3678,
+          "category": "behavioural"
+        },
+        {
+          "feature": "num_dependents",
+          "mean_abs_shap": 0.2164,
+          "category": "demographic"
+        },
+        {
+          "feature": "tenure_months",
+          "mean_abs_shap": 0.1134,
+          "category": "behavioural"
+        },
+        {
+          "feature": "contract_months",
+          "mean_abs_shap": 0.1076,
+          "category": "behavioural"
+        },
+        {
+          "feature": "payment_method",
+          "mean_abs_shap": 0.1043,
+          "category": "behavioural"
+        },
+        {
+          "feature": "monthly_charge",
+          "mean_abs_shap": 0.0922,
+          "category": "behavioural"
+        },
+        {
+          "feature": "latitude",
+          "mean_abs_shap": 0.0813,
+          "category": "geographic"
+        },
+        {
+          "feature": "age",
+          "mean_abs_shap": 0.0796,
+          "category": "demographic"
+        },
+        {
+          "feature": "avg_monthly_charge",
+          "mean_abs_shap": 0.0753,
+          "category": "behavioural"
+        },
+        {
+          "feature": "avg_long_distance",
+          "mean_abs_shap": 0.0569,
+          "category": "behavioural"
+        },
+        {
+          "feature": "total_charges",
+          "mean_abs_shap": 0.0536,
+          "category": "behavioural"
+        },
+        {
+          "feature": "streaming_music",
+          "mean_abs_shap": 0.0483,
+          "category": "technographic"
+        }
+      ],
+      "importance_by_category": {
+        "geographic": 0.031,
+        "demographic": 0.0638,
+        "technographic": 0.1218,
+        "behavioural": 0.1968,
+        "psychographic": 0.5866
+      }
+    }
+  }
+}

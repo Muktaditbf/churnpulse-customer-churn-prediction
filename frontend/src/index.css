@@ -1,0 +1,91 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+/* Dark mode follows a .dark class on <html> (toggled in the top bar). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic colour tokens: components use bg-surface, text-ink, border-line...
+   and both themes just redefine the variables below. */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-app: var(--app);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+
+  --color-brand-50: #effefa;
+  --color-brand-100: #c8fff0;
+  --color-brand-200: #91fde2;
+  --color-brand-400: #2ee6c0;
+  --color-brand-500: #14c9a8;
+  --color-brand-600: #0aa38a;
+  --color-brand-700: #0d8271;
+  --color-brand-900: #10524a;
+}
+
+:root {
+  --app: #f4f6fb;
+  --surface: #ffffff;
+  --surface-2: #f6f8fc;
+  --line: #e4e8f0;
+  --ink: #0b1324;
+  --ink-2: #334155;
+  --muted: #6b7a90;
+  color-scheme: light;
+}
+
+.dark {
+  --app: #070b14;
+  --surface: #0e1524;
+  --surface-2: #131c2e;
+  --line: #1f2a3e;
+  --ink: #edf2fb;
+  --ink-2: #c3cddd;
+  --muted: #8592a8;
+  color-scheme: dark;
+}
+
+body { @apply bg-app text-ink antialiased; font-feature-settings: "cv11", "ss01"; }
+
+/* A soft brand glow behind the app in dark mode. */
+.dark body {
+  background-image:
+    radial-gradient(60rem 40rem at 10% -10%, rgb(20 201 168 / 0.08), transparent 60%),
+    radial-gradient(50rem 30rem at 100% 0%, rgb(99 102 241 / 0.07), transparent 60%);
+  background-attachment: fixed;
+}
+
+@utility card { @apply rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgb(15_23_42/0.04),0_8px_24px_-12px_rgb(15_23_42/0.12)] dark:shadow-none; }
+@utility label { @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-muted; }
+@utility input {
+  @apply w-full rounded-xl border border-line bg-surface-2 px-3.5 py-2.5 text-sm text-ink outline-none transition
+         placeholder:text-muted/70 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 disabled:opacity-60;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+         active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-lg shadow-brand-600/20 hover:brightness-110;
+}
+@utility btn-ghost { @apply btn border border-line bg-surface text-ink-2 hover:bg-surface-2; }
+@utility btn-danger { @apply btn border border-rose-500/30 bg-rose-500/10 text-rose-600 hover:bg-rose-500/15 dark:text-rose-400; }
+@utility chip { @apply inline-flex items-center gap-1 rounded-full border border-line bg-surface-2 px-2.5 py-0.5 text-xs font-medium text-ink-2; }
+
+@keyframes flash { from { background-color: rgb(20 201 168 / 0.14); } to { background-color: transparent; } }
+.flash { animation: flash 1.8s ease-out; }
+
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.skeleton { @apply relative overflow-hidden rounded-lg bg-surface-2; }
+.skeleton::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(148 163 184 / 0.15), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+/* Thin, theme-aware scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--line) transparent; }

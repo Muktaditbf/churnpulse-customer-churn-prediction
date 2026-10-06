@@ -1,0 +1,11 @@
+.venv
+**/__pycache__
+**/node_modules
+frontend/dist
+mlruns
+mlartifacts
+mlflow.db
+notebooks
+.git
+.ruff_cache
+.pytest_cache
