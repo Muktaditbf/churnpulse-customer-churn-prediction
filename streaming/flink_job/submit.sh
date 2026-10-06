@@ -1,7 +1,8 @@
 #!/bin/bash
 # Submit the scoring job once Flink is ready - and never twice.
 set -euo pipefail
-JM=http://flink-jobmanager:8081
+JM_HOST=${FLINK_JOBMANAGER:-flink-jobmanager}
+JM=http://$JM_HOST:8081
 JOB_NAME=churnpulse-realtime-scoring
 
 until curl -sf "$JM/overview" >/dev/null; do echo "waiting for the JobManager..."; sleep 3; done
@@ -20,6 +21,6 @@ fi
 
 echo "submitting $JOB_NAME"
 exec flink run --detached \
-  -Drest.address=flink-jobmanager -Drest.port=8081 \
+  -Drest.address=$JM_HOST -Drest.port=8081 \
   -pyclientexec /opt/venv/bin/python -pyexec /opt/venv/bin/python \
-  -py /opt/flink/usrlib/job.py
+  -py "${JOB_PY:-/opt/flink/usrlib/job.py}"

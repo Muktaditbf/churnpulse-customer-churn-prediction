@@ -3,12 +3,13 @@
     make test-e2e
 """
 
+import os
 import time
 
 import httpx
 import pytest
 
-API = "http://localhost:8000"
+API = os.environ.get("CHURNPULSE_API", "http://localhost:8000")
 
 
 def _stack_up() -> bool:

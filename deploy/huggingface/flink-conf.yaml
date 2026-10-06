@@ -1,0 +1,23 @@
+
+# --- ChurnPulse demo (single container) ---
+jobmanager.rpc.address: 127.0.0.1
+jobmanager.bind-host: 127.0.0.1
+taskmanager.bind-host: 127.0.0.1
+taskmanager.host: 127.0.0.1
+rest.address: 127.0.0.1
+rest.bind-address: 127.0.0.1
+taskmanager.numberOfTaskSlots: 2
+parallelism.default: 2
+jobmanager.memory.process.size: 1024m
+taskmanager.memory.process.size: 2560m
+taskmanager.memory.managed.fraction: 0.3
+execution.checkpointing.dir: file:///data/flink-checkpoints
+execution.checkpointing.interval: 30s
+execution.checkpointing.num-retained: 2
+state.backend.type: hashmap
+python.executable: /opt/venv/bin/python
+python.client.executable: /opt/venv/bin/python
+# Public dashboard is read-only: nobody can upload or cancel jobs.
+web.submit.enable: false
+web.cancel.enable: false
+web.rescale.enable: false

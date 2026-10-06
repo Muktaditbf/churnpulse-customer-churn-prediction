@@ -23,13 +23,19 @@ const NAV = [
   { to: "/model", label: "Models", icon: BrainCircuit },
 ];
 
-const TOOLS = [
-  { href: "http://localhost:8080", label: "Kafka UI" },
-  { href: "http://localhost:8081", label: "Flink" },
-  { href: "http://localhost:3001", label: "Grafana" },
-  { href: "http://localhost:5000", label: "MLflow" },
-  { href: "/api/docs", label: "API docs" },
-];
+// The public demo serves everything from one origin: only the safe, read-only tools.
+const TOOLS = import.meta.env.VITE_PUBLIC_DEMO
+  ? [
+      { href: "/flink/", label: "Flink" },
+      { href: "/api/docs", label: "API docs" },
+    ]
+  : [
+      { href: "http://localhost:8080", label: "Kafka UI" },
+      { href: "http://localhost:8081", label: "Flink" },
+      { href: "http://localhost:3001", label: "Grafana" },
+      { href: "http://localhost:5000", label: "MLflow" },
+      { href: "/api/docs", label: "API docs" },
+    ];
 
 export default function App() {
   const { theme, toggle } = useTheme();
